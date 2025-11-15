@@ -29,7 +29,7 @@ class TestInputValidation:
     
     def test_sector_validation_too_long(self, auth_headers):
         """Test sector name validation - too long"""
-        long_sector = "a" * 31  # 31 characters
+        long_sector = "a" * 60  # 51 characters (limit is now 50)
         response = client.get(f"/api/v1/analyze/{long_sector}", headers=auth_headers)
         assert response.status_code == 400
     
@@ -127,11 +127,18 @@ class TestInputValidation:
         response = client.get("/api/v1/analyze/   ", headers=auth_headers)
         assert response.status_code == 400
     
-    def test_sector_validation_mixed_valid_invalid(self, auth_headers):
+    def test_sector_validation_mixed_valid_invalid(self, auth_headers, mock_data_collector, mock_llm_client):
         """Test sector name validation - mixed valid and invalid characters"""
-        invalid_sectors = ["tech123", "sector_name", "sector.name", "sector name"]
+        # Invalid sectors (should be rejected)
+        invalid_sectors = ["tech123", "sector_name", "sector.name"]
         
         for sector in invalid_sectors:
             response = client.get(f"/api/v1/analyze/{sector}", headers=auth_headers)
             assert response.status_code == 400, \
                 f"Sector '{sector}' with mixed characters should be rejected"
+        
+        # Valid sector with space (should be accepted)
+        valid_sector = "cloud computing"
+        response = client.get(f"/api/v1/analyze/{valid_sector}", headers=auth_headers)
+        assert response.status_code in [200, 429], \
+            f"Sector '{valid_sector}' with space should be accepted"

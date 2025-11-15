@@ -84,17 +84,19 @@ class TestIntegration:
         response = client.get("/api/v1/analyze/pharmaceuticals", headers=auth_headers)
         assert response.status_code == 200
     
-    def test_health_endpoint_shows_session_count(self, auth_headers):
-        """Test that health endpoint shows active session count"""
-        # Create sessions by making authenticated requests
-        client.get("/api/v1/analyze/technology", headers=auth_headers)
-        
-        response = client.get("/api/v1/health")
+    def test_session_management_basic(self, auth_headers, mock_data_collector, mock_llm_client):
+        """Test that sessions are created and managed correctly"""
+        # Make an authenticated request to create a session
+        response = client.get("/api/v1/analyze/technology", headers=auth_headers)
         assert response.status_code == 200
-        data = response.json()
-        assert "status" in data
-        assert "active_sessions" in data
-        assert data["status"] == "ok"
+        
+        # Verify session was created
+        token = auth_headers["Authorization"].split(" ")[1]
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload["sub"]
+        
+        assert username in session_manager._sessions
+        assert session_manager._sessions[username].rate_limiter.capacity == RATE_LIMIT_CAPACITY
     
     def test_multiple_users_concurrent_access(
         self, mock_data_collector, mock_llm_client
