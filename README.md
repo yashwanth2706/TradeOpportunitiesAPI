@@ -686,10 +686,12 @@ python run.py
 
 ## 📚 Additional Resources
 
-- **API Documentation**: http://localhost:8000/docs (Swagger UI)
-- **Alternative Docs**: http://localhost:8000/redoc (ReDoc)
+- **📘 Complete API Documentation**: [APIDocumentation.md](APIDocumentation.md)
+- **Interactive API Docs**: http://localhost:8000/docs (Swagger UI)
+- **Alternative API Docs**: http://localhost:8000/redoc (ReDoc)
 - **Testing Guide**: [tests/TESTING.md](tests/TESTING.md)
 - **Project Documentation**: [documenation.md](documenation.md)
+- **Migration Guide**: [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)
 
 ## 🎯 Quick Reference Commands
 
