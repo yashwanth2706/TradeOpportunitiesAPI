@@ -45,6 +45,26 @@ def setup_and_run():
     print("Deactivating virtual environment...")
     subprocess.run(["deactivate"], shell=True, check=True)
 
+    # create .env file template if not exists
+    print("Creating .env file template if not exists...")
+    env_file = ".env"
+    if not os.path.exists(env_file):
+        print(f"Creating {env_file} file...")
+        with open(env_file, "w") as f:
+            f.write("LLM_API_KEY=your_llm_api_key\n")
+            f.write("LLM_MODEL_NAME=your_llm_model_name\n")
+            f.write("SECRET_KEY=your_secret_key\n")
+            f.write("DEBUG=True\n")
+        print(f"{env_file} file created.")
+        # securely generate a random SECRET_KEY and update the .env file
+        import secrets
+        secret_key = secrets.token_urlsafe(32)
+        with open(env_file, "a") as f:
+            f.write(f"SECRET_KEY={secret_key}\n")
+        print("A secure random SECRET_KEY has been generated and added to the .env file.")
+        print("Please update the other values in the .env file as needed.")
+    else:
+        print(f"{env_file} file already exists. Skipping creation.")  
 
     print("\nSetup complete!")
     print("To activate the virtual environment manually, run:")

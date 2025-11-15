@@ -55,9 +55,24 @@ TradeOpportunitiesAPI/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/TradeOpportunitiesAPI.git
-cd TradeOpportunitiesAPI/TradeOpportunitiesAPI
+git clone https://github.com/yashwanth2706/TradeOpportunitiesAPI.git
+cd TradeOpportunitiesAPI
 ```
+### (Recommended Fastest way to setup environment) Run setup.py
+- If Windows
+```bash
+python setup.py
+```
+- If Linux/MacOS
+```bash
+python3 setup.py
+```
+- This will create virtual environment and install dependencies from requirements.txt
+- Automatically deactivates once done
+- Please activate virtual envirornment manually again, See Step 2 for the commands
+- Creates .env file if doesnot exists, securely generates secretkey and adds it
+- Manual configuration still needed for other variables inside .env like API_KEY, MODEL_NAME, DEBUG...etc 
+- Manually activate the virtual envirornment from below commands depending upon your system 
 
 ### 2. Create Virtual Environment
 
