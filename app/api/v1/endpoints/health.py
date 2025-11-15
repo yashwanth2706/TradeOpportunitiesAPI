@@ -1,33 +1,35 @@
 """
 Health check endpoints
 """
+from datetime import datetime, timezone
 from fastapi import APIRouter
 
 from app.core.session import session_manager
+from app.config import settings
 
 router = APIRouter()
-
-
-@router.get("/")
-async def root():
-    """
-    Root endpoint - API welcome message
-    """
-    return {
-        "message": "Trade Opportunities API",
-        "docs": "/docs",
-        "version": "0.1.0"
-    }
 
 
 @router.get("/health")
 async def health():
     """
-    Health check endpoint
+    Health check endpoint for monitoring and load balancers.
     
-    Returns system status and active session count
+    Used by:
+    - Cloud platforms (AWS, Azure, GCP) for health probes
+    - Load balancers to route traffic
+    - Monitoring tools (Datadog, Prometheus, New Relic)
+    - CI/CD pipelines for deployment verification
+    
+    **Returns:**
+    - status: "healthy" if system is operational
+    - timestamp: Current server time (UTC)
+    - version: API version
+    - active_sessions: Number of active user sessions
     """
     return {
-        "status": "ok",
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": settings.APP_VERSION,
         "active_sessions": session_manager.active_sessions
     }
