@@ -181,10 +181,9 @@ python run.py
 ```bash
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
-
-**Option 3: Using uvicorn with custom settings**
+**Option 3: Directly Run with Python**
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --log-level debug
+python -m uvicorn app.main:app --reload
 ```
 
 ### 8. Verify Application is Running
