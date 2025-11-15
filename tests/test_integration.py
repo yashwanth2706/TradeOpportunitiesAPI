@@ -12,7 +12,6 @@ Test Coverage:
 
 import pytest
 import time
-from fastapi.testclient import TestClient
 from jose import jwt
 
 from app.config import settings

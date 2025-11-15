@@ -14,7 +14,6 @@ Test Coverage:
 
 import pytest
 import time
-from fastapi.testclient import TestClient
 
 from app.config import settings
 from app.core.session import SessionInfo

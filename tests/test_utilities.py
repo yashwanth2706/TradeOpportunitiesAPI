@@ -15,7 +15,6 @@ import time
 import os
 from datetime import timedelta
 from jose import jwt
-from unittest.mock import patch
 
 from app.config import settings
 from app.core.security import create_access_token
@@ -79,8 +78,6 @@ class TestAnalysisReportSaving:
         # Test filename pattern with _by_
         filename = "test_duplicate_sector_report_by_test-model.md"
         file_path_1 = os.path.join(reports_dir, filename)
-        file_path_2 = os.path.join(reports_dir, "test_duplicate_sector_report_(2)_by_test-model.md")
-        file_path_3 = os.path.join(reports_dir, "test_duplicate_sector_report_(3)_by_test-model.md")
         
         try:
             # Create first file
@@ -134,7 +131,6 @@ class TestAnalysisReportSaving:
         
         filename = "test_simple_duplicate.md"
         file_path_1 = os.path.join(reports_dir, filename)
-        file_path_2 = os.path.join(reports_dir, "test_simple_duplicate_(2).md")
         
         try:
             # Create first file
@@ -177,7 +173,6 @@ class TestAnalysisReportSaving:
         
         filename = "test_preserve_original_by_model.md"
         file_path_1 = os.path.join(reports_dir, filename)
-        file_path_2 = os.path.join(reports_dir, "test_preserve_original_(2)_by_model.md")
         
         try:
             # Create original file

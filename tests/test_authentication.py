@@ -14,8 +14,7 @@ Test Coverage:
 
 import pytest
 import time
-from datetime import datetime, timedelta
-from fastapi.testclient import TestClient
+from datetime import timedelta
 from jose import jwt
 
 from app.config import settings
