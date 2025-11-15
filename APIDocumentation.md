@@ -22,12 +22,13 @@
 The Trade Opportunities API provides AI-powered market analysis for various industry sectors. It uses Google's Gemini AI to analyze market data collected from multiple sources and generate comprehensive trade opportunity reports.
 
 **Key Features:**
-- 🔐 JWT-based authentication
-- 🚦 Token bucket rate limiting (5 requests/minute)
-- 🤖 AI-powered sector analysis
-- 📊 Markdown-formatted reports
-- ⏱️ Automatic session management
-- 🔒 Secure password hashing (bcrypt)
+- JWT-based authentication with 60-minute token expiration
+- Token bucket rate limiting (5 requests per 60 seconds per user)
+- AI-powered sector analysis using Google Gemini
+- Markdown-formatted reports with automatic file saving
+- Automatic session management with timezone-aware timestamps
+- Secure password hashing using bcrypt
+- Production-grade health monitoring endpoint
 
 **API Version:** v1  
 **Protocol:** HTTPS/HTTP  
@@ -73,9 +74,10 @@ Authorization: Bearer <your_jwt_token>
 
 ### Token Expiration
 
-- **Default:** 30 minutes
+- **Default:** 60 minutes
 - **Configurable:** via `ACCESS_TOKEN_EXPIRE_MINUTES` environment variable
 - **Refresh:** Login again to get a new token
+- **Session Management:** Sessions automatically expire after token expiration
 
 ---
 
@@ -141,37 +143,40 @@ Content-Type: application/json
 
 ### Health & Status
 
-#### GET /api/v1/
+#### GET /
 
-Get API welcome message and basic information.
+Root endpoint - Redirects to interactive API documentation.
 
 **Authentication:** Not required
 
 **Request:**
 ```http
-GET /api/v1/ HTTP/1.1
+GET / HTTP/1.1
 Host: localhost:8000
 ```
 
 **Response:**
-```json
-{
-  "message": "Trade Opportunities API",
-  "docs": "/docs",
-  "version": "0.1.0"
-}
+```http
+HTTP/1.1 307 Temporary Redirect
+Location: /docs
 ```
 
 **Status Codes:**
-- `200 OK` - Success
+- `307 Temporary Redirect` - Redirects to /docs
 
 ---
 
 #### GET /api/v1/health
 
-Check API health and get active session count.
+Production-grade health check endpoint for monitoring, load balancers, and CI/CD pipelines.
 
 **Authentication:** Not required
+
+**Use Cases:**
+- Cloud platform health probes (AWS, Azure, GCP)
+- Load balancer traffic routing decisions
+- Monitoring tools (Datadog, Prometheus, New Relic)
+- Deployment verification in CI/CD pipelines
 
 **Request:**
 ```http
@@ -182,13 +187,21 @@ Host: localhost:8000
 **Response:**
 ```json
 {
-  "status": "ok",
+  "status": "healthy",
+  "timestamp": "2025-11-15T14:30:45.123456+00:00",
+  "version": "0.1.0",
   "active_sessions": 3
 }
 ```
 
+**Response Fields:**
+- `status` (string): "healthy" if system is operational
+- `timestamp` (string): Current server time in ISO 8601 format (UTC)
+- `version` (string): API version number
+- `active_sessions` (integer): Number of active authenticated user sessions
+
 **Status Codes:**
-- `200 OK` - API is healthy
+- `200 OK` - API is healthy and operational
 
 ---
 
@@ -196,20 +209,20 @@ Host: localhost:8000
 
 #### POST /api/v1/auth/register
 
-Register a new user account.
+Register a new user account and receive instant access token.
 
 **Authentication:** Not required
 
 **Request Body:**
 ```json
 {
-  "username": "string (3-50 characters, alphanumeric + underscore)",
+  "username": "string (3-50 characters, alphanumeric)",
   "password": "string (6-100 characters)"
 }
 ```
 
 **Validation Rules:**
-- Username: 3-50 characters, alphanumeric and underscore only
+- Username: 3-50 characters, alphanumeric characters only
 - Password: 6-100 characters, any characters allowed
 
 **Request Example:**
@@ -227,8 +240,8 @@ Content-Type: application/json
 **Response (Success):**
 ```json
 {
-  "username": "johndoe",
-  "message": "User registered successfully"
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
 }
 ```
 
@@ -240,7 +253,7 @@ Content-Type: application/json
 ```
 
 **Status Codes:**
-- `200 OK` - User registered successfully
+- `201 Created` - User registered successfully, token returned
 - `400 Bad Request` - Username already exists
 - `422 Unprocessable Entity` - Validation error
 
@@ -331,9 +344,10 @@ Analyze a specific sector and generate a comprehensive market report.
 
 **Path Parameters:**
 - `sector` (string, required): Sector name to analyze
-  - Length: 2-30 characters
-  - Format: Alphabetic characters only
-  - Examples: `technology`, `pharmaceuticals`, `agriculture`
+  - Length: 2-50 characters after trimming whitespace
+  - Format: Letters and spaces only (maximum 4 consecutive spaces)
+  - Normalization: Converted to lowercase with single spaces
+  - Examples: `technology`, `cloud computing`, `agriculture and fertilizer`
 
 **Request Example:**
 ```http
@@ -347,16 +361,14 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 {
   "sector": "technology",
   "report_markdown": "# Technology Sector Trade Opportunities\n\n## Executive Summary\n...",
-  "generated_at": "2025-11-15T10:30:45.123456",
-  "model_used": "gemini-2.0-flash-exp"
+  "generated_at": "2025-11-15T10:30:45.123456"
 }
 ```
 
 **Response Fields:**
-- `sector` (string): The analyzed sector name
+- `sector` (string): The analyzed sector name (normalized to lowercase)
 - `report_markdown` (string): Full markdown-formatted analysis report
-- `generated_at` (string): ISO 8601 timestamp of report generation
-- `model_used` (string): AI model used for analysis
+- `generated_at` (datetime): ISO 8601 timestamp of report generation (UTC)
 
 **Report Structure:**
 
@@ -401,23 +413,21 @@ Reports are also saved to disk:
 **Invalid Sector:**
 ```json
 {
-  "detail": [
-    {
-      "loc": ["path", "sector"],
-      "msg": "string does not match regex '^[a-zA-Z]{2,30}$'",
-      "type": "value_error.str.regex"
-    }
-  ]
+  "detail": "Invalid sector parameter. Sector must be 2-50 alphabetic characters. Error: Sector must contain only letters and spaces"
 }
 ```
+
+**Common Validation Errors:**
+- Too short: "Sector must be at least 2 characters long"
+- Too long: "Sector must not exceed 50 characters"
+- Invalid characters: "Sector must contain only letters and spaces"
+- Too many spaces: "Sector cannot have more than 4 consecutive spaces"
+- Only spaces: "Sector cannot contain only spaces"
 
 **Analysis Failed:**
 ```json
 {
-  "sector": "technology",
-  "report_markdown": "Unable to perform analysis. Error: API key not configured",
-  "generated_at": "2025-11-15T10:30:45.123456",
-  "model_used": "gemini-2.0-flash-exp"
+  "detail": "LLM analysis failed"
 }
 ```
 
@@ -442,7 +452,9 @@ curl -X GET "http://localhost:8000/api/v1/analyze/technology" \
 
 **Supported Sectors:**
 
-Any alphabetic sector name (2-30 characters):
+Any sector name with letters and spaces (2-50 characters):
+
+**Single Word Sectors:**
 - `technology`
 - `pharmaceuticals`
 - `agriculture`
@@ -452,8 +464,18 @@ Any alphabetic sector name (2-30 characters):
 - `healthcare`
 - `manufacturing`
 - `retail`
-- `telecommunications`
-- etc.
+
+**Multi-Word Sectors:**
+- `cloud computing`
+- `renewable energy`
+- `artificial intelligence`
+- `machine learning`
+- `data science`
+- `cyber security`
+- `financial services`
+- `agriculture and fertilizer`
+
+**Note:** Spaces are automatically normalized (multiple spaces collapsed to single space)
 
 ---
 
@@ -515,8 +537,7 @@ curl -X GET "http://localhost:8000/api/v1/analyze/technology" \
 {
   "sector": "technology",
   "report_markdown": "# Technology Sector Trade Opportunities\n\n## Executive Summary\n\nThe technology sector shows strong momentum...\n\n## Key Drivers\n\n1. **AI Revolution**: Artificial intelligence adoption...\n2. **Cloud Computing**: Migration to cloud services...\n3. **5G Deployment**: Enhanced connectivity...\n\n## Top Opportunities\n\n### 1. Semiconductor Stocks\n- **Rationale**: Global chip shortage continues\n- **Timeline**: 6-12 months\n- **Risk Level**: Medium\n\n### 2. Cybersecurity Firms\n- **Rationale**: Rising cyber threats\n- **Timeline**: Long-term\n- **Risk Level**: Low\n\n## Risks\n\n- Regulatory scrutiny\n- Market saturation\n- Economic downturn\n\n## Suggested Trades\n\n**Long Positions:**\n- Large-cap tech companies with strong AI initiatives\n- Cloud infrastructure providers\n\n**Short Positions:**\n- Legacy hardware manufacturers\n- Companies with weak cybersecurity\n\n## Data Sources\n\n- Industry reports\n- Market analysis\n- Recent news articles",
-  "generated_at": "2025-11-15T10:30:45.123456",
-  "model_used": "gemini-2.0-flash-exp"
+  "generated_at": "2025-11-15T10:30:45.123456"
 }
 ```
 
@@ -532,7 +553,9 @@ curl -X GET "http://localhost:8000/api/v1/health"
 **Response:**
 ```json
 {
-  "status": "ok",
+  "status": "healthy",
+  "timestamp": "2025-11-15T14:30:45.123456+00:00",
+  "version": "0.1.0",
   "active_sessions": 5
 }
 ```
@@ -621,20 +644,23 @@ class TradeOpportunitiesAPI:
 # Usage example
 api = TradeOpportunitiesAPI()
 
-# Register
+# Register (automatically gets token)
 print(api.register("myuser", "mypassword"))
 
-# Login
+# Login (if needed later)
 print(api.login("myuser", "mypassword"))
 
 # Analyze sector
 report = api.analyze_sector("technology")
 print(f"Generated report for: {report['sector']}")
-print(f"Model used: {report['model_used']}")
+print(f"Generated at: {report['generated_at']}")
 print(report['report_markdown'][:200])  # First 200 chars
 
 # Health check
-print(api.health_check())
+health = api.health_check()
+print(f"API Status: {health['status']}")
+print(f"Active Sessions: {health['active_sessions']}")
+print(f"Server Time: {health['timestamp']}")
 ```
 
 ---
@@ -694,20 +720,23 @@ class TradeOpportunitiesAPI {
 (async () => {
     const api = new TradeOpportunitiesAPI();
 
-    // Register
+    // Register (automatically gets token)
     console.log(await api.register('myuser', 'mypassword'));
 
-    // Login
+    // Login (if needed later)
     console.log(await api.login('myuser', 'mypassword'));
 
     // Analyze sector
     const report = await api.analyzeSector('technology');
     console.log(`Generated report for: ${report.sector}`);
-    console.log(`Model used: ${report.model_used}`);
+    console.log(`Generated at: ${report.generated_at}`);
     console.log(report.report_markdown.substring(0, 200));
 
     // Health check
-    console.log(await api.healthCheck());
+    const health = await api.healthCheck();
+    console.log(`API Status: ${health.status}`);
+    console.log(`Active Sessions: ${health.active_sessions}`);
+    console.log(`Server Time: ${health.timestamp}`);
 })();
 ```
 
@@ -753,17 +782,20 @@ curl -X GET "${BASE_URL}/health" | jq '.'
 
 The API provides interactive documentation at:
 
+- **Root URL:** http://localhost:8000/
+  - Automatically redirects to /docs
+
 - **Swagger UI:** http://localhost:8000/docs
-  - Interactive API explorer
-  - Try out endpoints directly
+  - Interactive API explorer with "Try it out" functionality
+  - Built-in authentication with Authorize button
   - View request/response schemas
-  - Download OpenAPI spec
+  - Download OpenAPI specification
 
 - **ReDoc:** http://localhost:8000/redoc
   - Clean, organized documentation
   - Searchable endpoints
-  - Code samples
-  - Detailed schemas
+  - Detailed schemas with examples
+  - No interactive testing (read-only)
 
 ---
 
