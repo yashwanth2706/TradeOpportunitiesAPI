@@ -25,16 +25,21 @@ async def analyze_sector(
     current_user: str = Depends(get_current_user)
 ):
     """
-    Analyze trade opportunities for a given sector.
+    Get AI-powered market analysis for any sector.
     
-    **Requires JWT authentication.**
+     **Authentication Required** - Use Bearer token or click Authorize
     
-    **Parameters:**
-    - sector: Sector name (2-30 alphabetic characters only)
+    **Example Sectors:**
+    - `technology` - Tech industry analysis
+    - `healthcare` - Healthcare market insights
+    - `agriculture` - Agriculture sector trends
+    - `energy` - Energy market analysis
     
-    **Returns:** Comprehensive market analysis report
+    **Returns:** 
+    - Comprehensive markdown report with market data, trends, and opportunities
+    - Generated using Google Gemini AI
     
-    **Rate Limit:** 5 requests per minute per user
+    **Rate Limit:** 5 requests per 60 seconds
     """
     # Input validation
     try:

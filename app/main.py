@@ -29,22 +29,24 @@ def create_app() -> FastAPI:
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
         description="""
-        API for analyzing trade opportunities across different sectors.
+        AI-powered API for analyzing trade opportunities across different sectors.
+        
+        ## Quick Start
+        
+        1. **Register** at `/api/v1/auth/register` - Get instant access token
+        2. **Authorize** - Click Authorize button, enter Registered username & password Ignore: Client credentials location section:
+        3. **Analyze** - Use `/api/v1/analyze/{sector}` to get AI market insights
         
         ## Authentication
-        1. **Register**: Create a new account at `/api/v1/auth/register` - returns an access token
-        2. **Login**: Get a token at `/api/v1/auth/token` using your credentials
-        3. **Authorize**: Click the 🔒 Authorize button and enter your username/password
-           - Leave `client_id` and `client_secret` fields empty (not required)
-        4. Use the token to access protected endpoints like `/api/v1/analyze/{sector}`
+        
+        - Register returns an access token immediately
+        - Token is valid for 60 minutes
+        - Use Bearer token in requests or authorize via Swagger UI
         
         ## Rate Limiting
-        - 5 requests per minute per user
-        - Tokens refill automatically
         
-        ## API Versioning
-        - Current version: v1
-        - Base path: `/api/v1`
+        - 5 requests per 60 seconds per user
+        - Tokens refill automatically
         """,
         docs_url="/docs",
         redoc_url="/redoc",

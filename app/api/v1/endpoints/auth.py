@@ -18,13 +18,17 @@ router = APIRouter()
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 async def register(user: UserRegister):
     """
-    Register a new user and return an access token.
+    Register a new user and get instant access token.
+    
+    Create an account and receive a JWT token immediately - no separate login needed!
     
     **Requirements:**
-    - Username: 3-50 characters
+    - Username: 3-50 characters (alphanumeric)
     - Password: minimum 6 characters
     
-    **Returns:** JWT access token valid for 60 minutes
+    **Returns:** 
+    - JWT access token (valid for 60 minutes)
+    - Use this token to access protected endpoints
     """
     # Register the user (raises exception if username exists)
     register_user(user.username, user.password)
@@ -43,16 +47,15 @@ async def register(user: UserRegister):
 @router.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """
-    OAuth2 compatible token login endpoint (required for Swagger UI authorization).
+    Login with username and password to get access token.
     
-    Use this endpoint to authenticate and receive a JWT access token.
-    The token is valid for 60 minutes.
+    **Swagger UI Users:** Click the Authorize button at the top - it uses this endpoint automatically.
     
-    **Note:** In the Swagger UI "Authorize" dialog, you only need to provide:
-    - username
-    - password
+    **API Users:** Send username and password to get a JWT token.
     
-    Leave `client_id` and `client_secret` empty - they are not required.
+    **Returns:** 
+    - JWT access token (valid for 60 minutes)
+    - Token type: Bearer
     """
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
