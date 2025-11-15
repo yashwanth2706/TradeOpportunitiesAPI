@@ -4,6 +4,7 @@ Main FastAPI application
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from app.config import settings
 from app.api.v1.router import api_router
@@ -61,6 +62,12 @@ def create_app() -> FastAPI:
     
     # Include API router
     app.include_router(api_router, prefix=settings.api_v1_prefix)
+    
+    # Root endpoint - redirect to docs
+    @app.get("/", include_in_schema=False)
+    async def root():
+        """Redirect root to API documentation"""
+        return RedirectResponse(url="/docs")
     
     # Startup event
     @asynccontextmanager
